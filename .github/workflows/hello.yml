@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Bir mesaj yazdır
-        run: echo "Merhaba GitHub Actions!"
+        run: echo "Bu ikinci denemem!"
 
       - name: Tarihi göster
         run: date
