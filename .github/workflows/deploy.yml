@@ -1,0 +1,28 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Replace placeholders in index.html
+        run: |
+          DEPLOY_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          COMMIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          sed -i "s/{{DEPLOY_TIME}}/$DEPLOY_TIME/" index.html
+          sed -i "s/{{COMMIT_SHA}}/$COMMIT_SHA/" index.html
+
+      - name: Deploy to VM via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "index.html"
+          target: "/var/www/html/"
