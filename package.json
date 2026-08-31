@@ -1,1 +1,14 @@
 
+{
+  "name": "github-actions-demo-app",
+  "version": "1.0.0",
+  "description": "Simple Express app for learning GitHub Actions deploy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
