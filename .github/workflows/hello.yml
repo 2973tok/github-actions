@@ -1,6 +1,10 @@
 name: Merhaba Dünya
 
-on: push
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   selamla:
@@ -8,3 +12,9 @@ jobs:
     steps:
       - name: Bir mesaj yazdır
         run: echo "Merhaba GitHub Actions!"
+
+      - name: Tarihi göster
+        run: date
+
+      - name: Klasörü listele
+        run: ls -la
