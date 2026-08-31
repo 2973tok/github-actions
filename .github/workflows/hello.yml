@@ -1,0 +1,10 @@
+name: Merhaba Dünya
+
+on: push
+
+jobs:
+  selamla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bir mesaj yazdır
+        run: echo "Merhaba GitHub Actions!"
