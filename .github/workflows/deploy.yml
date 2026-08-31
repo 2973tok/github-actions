@@ -37,17 +37,40 @@ jobs:
           name: website-files
           path: index.html
 
-  deploy:
+  deploy-staging:
     needs: build
     runs-on: ubuntu-latest
-    environment: production
+    environment:
+      name: staging
+      url: http://130.61.140.80:8081
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: website-files
 
-      - name: Deploy to VM via SCP
+      - name: Deploy to STAGING via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "index.html"
+          target: "/var/www/staging/"
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://130.61.140.80:8080
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: website-files
+
+      - name: Deploy to PRODUCTION via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
