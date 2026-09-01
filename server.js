@@ -79,7 +79,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', uptime: uptimeMs !== undefined ? uptimeMs : (new Date() - startTime) });
+    const uptimeMs = new Date() - startTime;
+    res.status(200).json({ status: 'ok', uptime: uptimeMs });
 });
 
 app.listen(PORT, () => {
