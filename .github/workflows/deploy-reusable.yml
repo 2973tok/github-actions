@@ -1,0 +1,48 @@
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment_name:
+        required: true
+        type: string
+      target_folder:
+        required: true
+        type: string
+      service_name:
+        required: true
+        type: string
+      health_port:
+        required: true
+        type: string
+    secrets:
+      vm_host:
+        required: true
+      vm_username:
+        required: true
+      vm_ssh_key:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment_name }}
+    steps:
+      - name: Deploy and restart on VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.vm_host }}
+          username: ${{ secrets.vm_username }}
+          key: ${{ secrets.vm_ssh_key }}
+          script: |
+            cd /home/ubuntu/apps/${{ inputs.target_folder }}
+            rm -rf temp
+            git clone https://github.com/2973tok/github-actions.git temp
+            cp temp/server.js .
+            cp temp/package.json .
+            rm -rf temp
+            npm install
+            sudo systemctl restart ${{ inputs.service_name }}
+            sleep 2
+            curl -f http://localhost:${{ inputs.health_port }}/health || exit 1
