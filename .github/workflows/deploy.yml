@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-   test:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,7 +27,6 @@ jobs:
 
       - name: Run tests
         run: npm test
-
   deploy-staging:
     needs: test
     uses: ./.github/workflows/deploy-reusable.yml
