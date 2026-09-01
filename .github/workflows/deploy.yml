@@ -11,52 +11,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install HTML Tidy
-        run: sudo apt-get update && sudo apt-get install -y tidy
+      - name: Install dependencies
+        run: npm install
 
-      - name: Validate HTML syntax
-        run: tidy -q -e index.html
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Replace placeholders in index.html
-        run: |
-          DEPLOY_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          COMMIT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          sed -i "s/{{DEPLOY_TIME}}/$DEPLOY_TIME/" index.html
-          sed -i "s/{{COMMIT_SHA}}/$COMMIT_SHA/" index.html
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: website-files
-          path: index.html
+      - name: Run tests
+        run: npm test
 
   deploy-staging:
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: staging
       url: http://130.61.140.80:8081
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: website-files
-
-      - name: Deploy to STAGING via SCP
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy and restart on VM (staging)
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "index.html"
-          target: "/var/www/staging/"
+          script: |
+            cd /home/ubuntu/apps/staging
+            rm -rf temp
+            git clone https://github.com/2973tok/github-actions.git temp
+            cp temp/server.js .
+            cp temp/package.json .
+            rm -rf temp
+            npm install
+            sudo systemctl restart app-staging
+            sleep 2
+            curl -f http://localhost:3001/health || exit 1
 
   deploy-production:
     needs: deploy-staging
@@ -65,16 +49,20 @@ jobs:
       name: production
       url: http://130.61.140.80:8080
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: website-files
-
-      - name: Deploy to PRODUCTION via SCP
-        uses: appleboy/scp-action@v0.1.7
+      - name: Deploy and restart on VM (production)
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "index.html"
-          target: "/var/www/html/"
+          script: |
+            cd /home/ubuntu/apps/production
+            rm -rf temp
+            git clone https://github.com/2973tok/github-actions.git temp
+            cp temp/server.js .
+            cp temp/package.json .
+            rm -rf temp
+            npm install
+            sudo systemctl restart app-production
+            sleep 2
+            curl -f http://localhost:3000/health || exit 1
