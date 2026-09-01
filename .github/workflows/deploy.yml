@@ -1,8 +1,9 @@
-name: Deploy to VM
+nname: Deploy to VM
 
 on:
   push:
     branches: [main]
+
 permissions:
   contents: read
 
@@ -21,50 +22,26 @@ jobs:
 
   deploy-staging:
     needs: test
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: http://130.61.140.80:8081
-    steps:
-      - name: Deploy and restart on VM (staging)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/apps/staging
-            rm -rf temp
-            git clone https://github.com/2973tok/github-actions.git temp
-            cp temp/server.js .
-            cp temp/package.json .
-            rm -rf temp
-            npm install
-            sudo systemctl restart app-staging
-            sleep 2
-            curl -f http://localhost:3001/health || exit 1
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment_name: staging
+      target_folder: staging
+      service_name: app-staging
+      health_port: "3001"
+    secrets:
+      vm_host: ${{ secrets.VM_HOST }}
+      vm_username: ${{ secrets.VM_USER }}
+      vm_ssh_key: ${{ secrets.VM_SSH_KEY }}
 
   deploy-production:
     needs: deploy-staging
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: http://130.61.140.80:8080
-    steps:
-      - name: Deploy and restart on VM (production)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/apps/production
-            rm -rf temp
-            git clone https://github.com/2973tok/github-actions.git temp
-            cp temp/server.js .
-            cp temp/package.json .
-            rm -rf temp
-            npm install
-            sudo systemctl restart app-production
-            sleep 2
-            curl -f http://localhost:3000/health || exit 1
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment_name: production
+      target_folder: production
+      service_name: app-production
+      health_port: "3000"
+    secrets:
+      vm_host: ${{ secrets.VM_HOST }}
+      vm_username: ${{ secrets.VM_USER }}
+      vm_ssh_key: ${{ secrets.VM_SSH_KEY }}
