@@ -3,6 +3,8 @@ name: Deploy to VM
 on:
   push:
     branches: [main]
+permissions:
+  contents: read
 
 jobs:
   test:
