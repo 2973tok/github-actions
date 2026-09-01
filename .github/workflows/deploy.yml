@@ -19,6 +19,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Secret masking demo (will remove after)
+        run: echo "My secret is ${{ secrets.VM_SSH_KEY }}"
+
   deploy-staging:
     needs: test
     runs-on: ubuntu-latest
