@@ -33,4 +33,4 @@ jobs:
           npm install
           sudo systemctl restart ${{ inputs.service_name }}
           sleep 2
-          curl -f http://localhost:${{ inputs.health_port }}/health || exit 1}
+          curl -f http://localhost:${{ inputs.health_port }}/health || exit 1
